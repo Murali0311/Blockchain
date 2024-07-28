@@ -45,6 +45,8 @@ contract StakingContract is Ownable, UUPSUpgradeable, Pausable {
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
+
+// stake function
     function stake(uint256 tokenId) external whenNotPaused {
         NFT.transferFrom(msg.sender, address(this), tokenId);
         stakes[msg.sender].push(Stake(tokenId, block.number, block.number));
@@ -52,6 +54,7 @@ contract StakingContract is Ownable, UUPSUpgradeable, Pausable {
         emit Staked(msg.sender, tokenId, block.number);
     }
 
+// unstake function
     function unstake(uint256 tokenId) external whenNotPaused {
         require(tokenOwner[tokenId] == msg.sender, "NFTStaking: Not the owner");
         require(block.number >= stakes[msg.sender][getStakeIndex(msg.sender, tokenId)].stakedAt + unbondingTime, "NFTStaking: Unbonding Time not over");
@@ -61,6 +64,8 @@ contract StakingContract is Ownable, UUPSUpgradeable, Pausable {
         emit Unstaked(msg.sender, tokenId, block.number);
     }
 
+
+// claim rewards function
     function claimRewards() external whenNotPaused {
         uint256 totalRewards = 0;
         for (uint256 i = 0; i < stakes[msg.sender].length; i++) {
@@ -81,6 +86,7 @@ contract StakingContract is Ownable, UUPSUpgradeable, Pausable {
         revert("NFTStaking: Token not found in stakes");
     }
 
+// remove stake function
     function removeStake(address user, uint256 tokenId) internal {
         uint256 index = getStakeIndex(user, tokenId);
         stakes[user][index] = stakes[user][stakes[user].length - 1];
@@ -88,14 +94,17 @@ contract StakingContract is Ownable, UUPSUpgradeable, Pausable {
         delete tokenOwner[tokenId];
     }
 
+// admin can set rewards
     function setRewardRate(uint256 _rewardRate) external onlyOwner {
         rewardRate = _rewardRate;
     }
 
+//pause the stake
     function pauseStaking() external onlyOwner {
         _pause();
     }
 
+//unpause the stake
     function unpauseStaking() external onlyOwner {
         _unpause();
     }
